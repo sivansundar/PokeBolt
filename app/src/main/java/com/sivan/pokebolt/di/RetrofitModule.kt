@@ -37,7 +37,9 @@ object RetrofitModule {
         return Retrofit.Builder()
             .baseUrl("https://us-central1-samaritan-android-assignment.cloudfunctions.net")
             .addConverterFactory(GsonConverterFactory.create(gson))
+
     }
+
 
     @Singleton
     @Provides

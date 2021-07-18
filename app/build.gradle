@@ -76,6 +76,7 @@ dependencies {
     //Coil
     implementation("io.coil-kt:coil:1.1.1")
 
+
     //Hilt
     implementation "com.google.dagger:hilt-android:2.37"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'

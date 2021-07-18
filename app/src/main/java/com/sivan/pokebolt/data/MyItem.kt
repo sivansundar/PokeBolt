@@ -18,7 +18,7 @@ class MyItem(
         return position
     }
 
-    override fun getTitle(): String{
+    override fun getTitle(): String {
         return title
     }
 
