@@ -2,25 +2,51 @@ package com.sivan.pokebolt
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayoutMediator
 import com.sivan.pokebolt.databinding.ActivityMainBinding
+import com.sivan.pokebolt.retrofit.DataState
 import com.sivan.pokebolt.ui.MainViewPagerAdapter
 import com.sivan.pokebolt.ui.mainviewpager.screens.CapturedFragment
 import com.sivan.pokebolt.ui.mainviewpager.screens.CommunityFragment
 import com.sivan.pokebolt.ui.mainviewpager.screens.ExploreFragment
 import com.sivan.pokebolt.ui.mainviewpager.screens.MyTeamFragment
+import com.sivan.pokebolt.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityMainBinding
 
+    val mainViewModel : MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            mainViewModel.getMyTeam().collect {
+                when(it){
+                    is DataState.Loading -> {
+                        Timber.d("Loading")
+                    }
+                    is DataState.Success -> {
+                        Timber.d("Success")
+                    }
+                    is DataState.Error -> {
+                        Timber.d("Error")
+                    }
+                }
+            }
+        }
 
         val fragmentList = arrayListOf<Fragment>(
             ExploreFragment(),

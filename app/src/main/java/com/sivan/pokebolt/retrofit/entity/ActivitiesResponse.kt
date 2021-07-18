@@ -35,6 +35,7 @@ data class FFObject(
 
 ) : Parcelable{}
 
+
 @Parcelize
 data class Pokemon(
     @SerializedName("id")
@@ -47,7 +48,11 @@ data class Pokemon(
 
     var sprites: Sprites,
 
+    var types: List<Types>,
+
+    var moves : List<Moves>,
+
     @SerializedName("captured_at")
     @Expose
     val captured_at: String
-) : Parcelable {}
+) : Parcelable{}

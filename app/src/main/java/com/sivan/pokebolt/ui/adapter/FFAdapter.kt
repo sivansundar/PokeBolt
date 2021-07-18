@@ -5,14 +5,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.sivan.pokebolt.databinding.ActivityItemBinding
-import com.sivan.pokebolt.retrofit.entity.ActivitiesResponse
 import com.sivan.pokebolt.retrofit.entity.FFObject
-import com.sivan.pokebolt.util.OnItemClickInterface
+import com.sivan.pokebolt.util.OnFFItemClickInterface
 import com.sivan.pokebolt.util.toDate
 import com.sivan.pokebolt.util.toLocalTime12Hr
 
 class FFAdapter(
-    private val listener: OnItemClickInterface) : RecyclerView.Adapter<FFAdapter.ActivityAdapterVH>() {
+    private val listener: OnFFItemClickInterface) : RecyclerView.Adapter<FFAdapter.ActivityAdapterVH>() {
 
     var ffList : ArrayList<FFObject> = ArrayList()
 
@@ -50,8 +49,6 @@ class FFAdapter(
                     listener.onItemClick(item)
                 }
             }
-
-
         }
 
         fun bind(item: FFObject) {

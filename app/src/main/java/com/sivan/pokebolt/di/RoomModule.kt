@@ -3,6 +3,7 @@ package com.sivan.pokebolt.di
 import android.content.Context
 import androidx.room.Room
 import com.sivan.pokebolt.database.PokeBoltDatabase
+import com.sivan.pokebolt.database.dao.MyTeamDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +15,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object RoomModule {
 
-
     @Provides
     @Singleton
     fun providePokeBoltDatabase(@ApplicationContext context : Context) : PokeBoltDatabase {
@@ -25,5 +25,9 @@ object RoomModule {
         ).build()
     }
 
-
+    @Singleton
+    @Provides
+    fun provideMyTeamDao(pokeBoltDatabase: PokeBoltDatabase) : MyTeamDao {
+        return pokeBoltDatabase.myTeamDao()
+    }
 }

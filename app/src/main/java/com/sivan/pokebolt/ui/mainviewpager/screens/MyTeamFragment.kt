@@ -1,12 +1,26 @@
 package com.sivan.pokebolt.ui.mainviewpager.screens
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.sivan.pokebolt.R
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.sivan.pokebolt.data.TeamItem
+import com.sivan.pokebolt.database.entities.toListModel
 import com.sivan.pokebolt.databinding.FragmentMyTeamBinding
+import com.sivan.pokebolt.ui.activities.DetailsActivity
+import com.sivan.pokebolt.ui.adapter.TeamsAdapter
+import com.sivan.pokebolt.util.OnTeamItemClickInterface
+import com.sivan.pokebolt.viewmodel.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -18,12 +32,17 @@ private const val ARG_PARAM2 = "param2"
  * Use the [MyTeamFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class MyTeamFragment : Fragment() {
+@AndroidEntryPoint
+class MyTeamFragment : Fragment(), OnTeamItemClickInterface {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
 
     lateinit var binding : FragmentMyTeamBinding
+
+    private val mainViewModel: MainViewModel by viewModels()
+
+    lateinit var myteamAdapter : TeamsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,8 +58,33 @@ class MyTeamFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentMyTeamBinding.inflate(layoutInflater)
+
+        setupTeamsRecyclerView()
+        getMyTeamData()
+
         return binding.root
     }
+
+    private fun setupTeamsRecyclerView() {
+        myteamAdapter = TeamsAdapter(this)
+        binding.apply {
+            myTeamRecyclerView.apply {
+                adapter = myteamAdapter
+                layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+            }
+        }
+    }
+
+    private fun getMyTeamData() {
+        lifecycleScope.launch {
+            mainViewModel.getMyTeamFromDB().collect {
+                myteamAdapter.updateItems(it.toListModel())
+                Timber.d("Success")
+                Timber.d("Data : ${it}")
+            }
+        }
+    }
+
 
     companion object {
         /**
@@ -60,5 +104,12 @@ class MyTeamFragment : Fragment() {
                     putString(ARG_PARAM2, param2)
                 }
             }
+    }
+
+    override fun onItemClick(item: TeamItem) {
+        startActivity(
+            Intent(context, DetailsActivity::class.java)
+            .putExtra("type", "team")
+            .putExtra("team_item", item))
     }
 }

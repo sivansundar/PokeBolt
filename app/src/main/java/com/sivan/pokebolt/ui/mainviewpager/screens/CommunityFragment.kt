@@ -13,11 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sivan.pokebolt.databinding.FragmentCommunityBinding
 import com.sivan.pokebolt.retrofit.DataState
-import com.sivan.pokebolt.retrofit.entity.ActivitiesResponse
 import com.sivan.pokebolt.retrofit.entity.FFObject
 import com.sivan.pokebolt.ui.activities.DetailsActivity
 import com.sivan.pokebolt.ui.adapter.FFAdapter
-import com.sivan.pokebolt.util.OnItemClickInterface
+import com.sivan.pokebolt.util.OnFFItemClickInterface
 import com.sivan.pokebolt.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +35,7 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 @AndroidEntryPoint
-class CommunityFragment : Fragment(), OnItemClickInterface {
+class CommunityFragment : Fragment(), OnFFItemClickInterface {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
