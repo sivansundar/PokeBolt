@@ -1,19 +1,31 @@
 package com.sivan.pokebolt.ui.activities
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import coil.load
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.chip.Chip
+import com.sivan.pokebolt.R
 import com.sivan.pokebolt.data.TeamItem
 import com.sivan.pokebolt.databinding.ActivityDetailsBinding
 import com.sivan.pokebolt.retrofit.entity.FFObject
-import com.sivan.pokebolt.retrofit.entity.Moves
-import com.sivan.pokebolt.retrofit.entity.Types
 import com.sivan.pokebolt.util.toDate
 import timber.log.Timber
+
 
 class DetailsActivity : AppCompatActivity() {
 
@@ -22,13 +34,18 @@ class DetailsActivity : AppCompatActivity() {
     lateinit var ffObject: FFObject
     lateinit var teamObject : TeamItem
 
+    lateinit var mGoogleMap : GoogleMap
+    lateinit var type : String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val type = intent.extras?.getString("type").toString()
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(callback)
 
+         type = intent.extras?.getString("type").toString()
 
         when(type) {
             "ff" -> {
@@ -37,16 +54,24 @@ class DetailsActivity : AppCompatActivity() {
                 binding.capturedInfoLayout.root.isVisible = false
                 binding.captureButton.isVisible = false
 
+                binding.basicInfoLayout.capturedOnText.text = "Captured on ${ffObject.pokemon.captured_at.toDate()}"
+
+                for (item in ffObject.pokemon.types) {
+                    val chip = createChip(item.type.name)
+                    binding.basicInfoLayout.typesChipGroup.addView(chip)
+                }
+
+                for (item in ffObject.pokemon.moves) {
+                    val chip = createChip(item.move.name)
+                    binding.movesInfoLayout.movesChipGroup.addView(chip)
+                }
+
+
                 setupAppBarLayout(
                     ffObject.pokemon.name,
                     ffObject.pokemon.sprites.front_default,
-                    ffObject.pokemon.sprites.back_default,
-                    ffObject.pokemon.captured_at,
-                    ffObject.pokemon.types,
-                    ffObject.pokemon.moves
+                    ffObject.pokemon.sprites.back_default
                 )
-
-                // Get move details
 
             }
 
@@ -73,13 +98,24 @@ class DetailsActivity : AppCompatActivity() {
 
                 binding.captureButton.isVisible = false
 
+                binding.basicInfoLayout.capturedOnText.text = "Captured on ${teamObject.captured_at.toDate()}"
+
+
+                for (item in teamObject.types) {
+                    val chip = createChip(item.type.name)
+                    binding.basicInfoLayout.typesChipGroup.addView(chip)
+                }
+
+                for (item in teamObject.moves) {
+                    val chip = createChip(item.move.name)
+                    binding.movesInfoLayout.movesChipGroup.addView(chip)
+                }
+
+
                 setupAppBarLayout(
                     teamObject.name,
                     teamObject.sprites.other.official_artwork.front_default,
-                    teamObject.sprites.back_default,
-                    teamObject.captured_at,
-                    teamObject.types,
-                    teamObject.moves
+                    teamObject.sprites.back_default
                 )
             }
         }
@@ -88,10 +124,7 @@ class DetailsActivity : AppCompatActivity() {
     private fun setupAppBarLayout(
         name: String,
         frontDefault: String,
-        backDefault: String,
-        capturedAt: String,
-        types: List<Types>,
-        moves: List<Moves>
+        backDefault: String
     ) {
         binding.appBarLayout.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
             var isShow = false
@@ -131,26 +164,54 @@ class DetailsActivity : AppCompatActivity() {
             backImage.load(backDefault)
         }
 
-        binding.basicInfoLayout.apply {
-            capturedOnText.text = "Captured on ${capturedAt.toDate()}"
-            for (item in types) {
-                val chip = createChip(item.type.name)
-                typesChipGroup.addView(chip)
-            }
-        }
-
-        binding.movesInfoLayout.apply {
-            for (item in moves) {
-                val chip = createChip(item.move.name)
-                movesChipGroup.addView(chip)
-            }
-        }
-
     }
 
     private fun createChip(name: String): View {
         val item = Chip(this@DetailsActivity)
         item.text = name
         return item
+    }
+
+    private val callback = OnMapReadyCallback { googleMap ->
+        /**
+         * Manipulates the map once available.
+         * This callback is triggered when the map is ready to be used.
+         * This is where we can add markers or lines, add listeners or move the camera.
+         * In this case, we just add a marker near Sydney, Australia.
+         * If Google Play services is not installed on the device, the user will be prompted to
+         * install it inside the SupportMapFragment. This method will only be triggered once the
+         * user has installed Google Play services and returned to the app.
+         */
+        /**
+         * Manipulates the map once available.
+         * This callback is triggered when the map is ready to be used.
+         * This is where we can add markers or lines, add listeners or move the camera.
+         * In this case, we just add a marker near Sydney, Australia.
+         * If Google Play services is not installed on the device, the user will be prompted to
+         * install it inside the SupportMapFragment. This method will only be triggered once the
+         * user has installed Google Play services and returned to the app.
+         */
+        mGoogleMap = googleMap
+
+        when(type) {
+            "team" -> {
+                val latlng = LatLng(teamObject.captured_lat_at, teamObject.captured_long_at)
+                mGoogleMap.addMarker(MarkerOptions().position(latlng).title(teamObject.name)
+                    .icon(bitmapDescriptorFromVector(this, R.drawable.pokeball_pokemon_svgrepo_com))
+                )
+                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 10f))
+
+            }
+        }
+
+    }
+
+    private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
+        return ContextCompat.getDrawable(context, vectorResId)?.run {
+            setBounds(0, 0, 80, 80)
+            val bitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888)
+            draw(Canvas(bitmap))
+            BitmapDescriptorFactory.fromBitmap(bitmap)
+        }
     }
 }
