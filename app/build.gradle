@@ -77,6 +77,11 @@ dependencies {
     implementation("io.coil-kt:coil:1.1.1")
 
 
+    //RxJava
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
+    implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
+
+
     //Hilt
     implementation "com.google.dagger:hilt-android:2.37"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
@@ -96,6 +101,7 @@ dependencies {
     implementation "androidx.room:room-runtime:$room_version"
     // To use Kotlin annotation processing tool (kapt)
     kapt("androidx.room:room-compiler:$room_version")
+    implementation "androidx.room:room-rxjava3:2.3.0"
 
 
     // optional - Kotlin Extensions and Coroutines support for Room

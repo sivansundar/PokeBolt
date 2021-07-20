@@ -21,6 +21,9 @@ interface PokeBoltInterface {
     @GET("/my-team")
     suspend fun getMyTeam() : List<MyTeamEntity>
 
+    @GET("/captured")
+    suspend fun getCaptured() : List<CapturedResponse>
+
     @GET()
     fun getMoveDetails(@Url url : String) : MoveInfo
 

@@ -1,10 +1,14 @@
 package com.sivan.pokebolt.repository
 
+import androidx.lifecycle.liveData
+import com.sivan.pokebolt.database.dao.CapturedDao
 import com.sivan.pokebolt.database.dao.MyTeamDao
+import com.sivan.pokebolt.database.entities.CapturedCacheEntity
 import com.sivan.pokebolt.database.entities.MyTeamCacheEntity
 import com.sivan.pokebolt.retrofit.DataState
 import com.sivan.pokebolt.retrofit.PokeBoltInterface
 import com.sivan.pokebolt.retrofit.entity.PokemonResponse
+import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
@@ -15,7 +19,8 @@ import javax.inject.Inject
 
 class MainRepository @Inject constructor(
     private val pokeBoltInterface: PokeBoltInterface,
-    private val myTeamDao: MyTeamDao
+    private val myTeamDao: MyTeamDao,
+    private val capturedDao: CapturedDao
 ) {
 
 
@@ -47,6 +52,50 @@ class MainRepository @Inject constructor(
 
    }
 
+    suspend fun getCapturedList() = liveData{
+
+        emit(DataState.Loading)
+        try {
+
+            val capturedList = pokeBoltInterface.getCaptured()
+            for (item in capturedList) {
+                val pokemon = getPokemon(item.id.toString())
+                if (pokemon != null) {
+                    item.stats = pokemon.stats
+                    item.sprites = pokemon.sprites
+                    item.types = pokemon.types
+                }
+
+
+                val capturedCacheEntity = CapturedCacheEntity(
+                    pokemonId = item.id,
+                    name = item.name,
+                    sprites = Json.encodeToString(item.sprites),
+                    stats = Json.encodeToString(item.stats),
+                    types = Json.encodeToString(item.types),
+                    moves = Json.encodeToString(pokemon!!.moves),
+                    captured_at = item.captured_at,
+                    captured_lat_at = item.captured_lat_at,
+                    captured_long_at = item.captured_long_at
+                )
+
+                if (capturedDao.exists(item.id)) {
+                    Timber.d("Insert status : Pokemon exists with ID : ${item.id}")
+                } else {
+                    val insertStatus = capturedDao.insert(capturedCacheEntity)
+                    Timber.d("Insert status : $insertStatus")
+                }
+
+                emit(DataState.Success(capturedList))
+            }
+
+        }catch (e : Exception) {
+            Timber.d( "getCapturedList: ERROR : ${e.message} : Cause : ${e.cause} : StackTrace : ${e.printStackTrace()}")
+            emit(DataState.Error(e))
+
+
+        }
+    }
 
     suspend fun getPokemon(id : String): PokemonResponse? {
         return try {
@@ -102,6 +151,10 @@ class MainRepository @Inject constructor(
     }
 
     suspend fun getTeamFromDB(): Flow<List<MyTeamCacheEntity>> {
-            return myTeamDao.getTeamList()
+        return myTeamDao.getTeamList()
+    }
+
+    suspend fun getCapturedFromDB(): Observable<List<CapturedCacheEntity>> {
+        return capturedDao.getCapturedList()
     }
 }

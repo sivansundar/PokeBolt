@@ -46,6 +46,20 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+
+            mainViewModel.getCapturedList().observe(this@MainActivity, {
+                when(it){
+                    is DataState.Error -> {
+                        Timber.d("Captured list ERROR : ${it.exception.message}")
+                    }
+                    is DataState.Loading -> {
+                        Timber.d("Captured list Loading")
+                    }
+                    is DataState.Success -> {
+                        Timber.d("Captured list From network : ${it.data}")
+                    }
+                }
+            })
         }
 
         val fragmentList = arrayListOf<Fragment>(

@@ -1,12 +1,15 @@
 package com.sivan.pokebolt.viewmodel
 
 import androidx.lifecycle.*
+import com.sivan.pokebolt.database.entities.CapturedCacheEntity
 import com.sivan.pokebolt.database.entities.MyTeamCacheEntity
 import com.sivan.pokebolt.repository.MainRepository
 import com.sivan.pokebolt.retrofit.DataState
 import com.sivan.pokebolt.retrofit.entity.ActivitiesResponse
+import com.sivan.pokebolt.retrofit.entity.CapturedResponse
 import com.sivan.pokebolt.retrofit.entity.MyTeamEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import javax.inject.Inject
@@ -32,6 +35,14 @@ class MainViewModel @Inject constructor(
 
     suspend fun getPokemon(id : String){
         repository.getPokemon(id)
+    }
+
+    suspend fun getCapturedList(): LiveData<DataState<List<CapturedResponse>>> {
+        return repository.getCapturedList()
+    }
+
+    suspend fun getCapturedListFromDB(): Observable<List<CapturedCacheEntity>> {
+        return repository.getCapturedFromDB()
     }
 
 }

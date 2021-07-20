@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
 import android.view.View
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -20,9 +21,12 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.chip.Chip
 import com.sivan.pokebolt.R
+import com.sivan.pokebolt.data.CapturedItem
 import com.sivan.pokebolt.data.TeamItem
 import com.sivan.pokebolt.databinding.ActivityDetailsBinding
 import com.sivan.pokebolt.retrofit.entity.FFObject
+import com.sivan.pokebolt.retrofit.entity.Moves
+import com.sivan.pokebolt.retrofit.entity.Types
 import com.sivan.pokebolt.util.toDate
 import timber.log.Timber
 
@@ -33,6 +37,7 @@ class DetailsActivity : AppCompatActivity() {
 
     lateinit var ffObject: FFObject
     lateinit var teamObject : TeamItem
+    lateinit var capturedObject : CapturedItem
 
     lateinit var mGoogleMap : GoogleMap
     lateinit var type : String
@@ -45,14 +50,15 @@ class DetailsActivity : AppCompatActivity() {
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(callback)
 
-         type = intent.extras?.getString("type").toString()
+        type = intent.extras?.getString("type").toString()
 
         when(type) {
             "ff" -> {
                 Timber.d("Type : FF")
                 ffObject = intent.extras?.getParcelable("ff_item")!!
-                binding.capturedInfoLayout.root.isVisible = false
-                binding.captureButton.isVisible = false
+                updateViewState(binding.capturedInfoLayout.root, false)
+                updateViewState(binding.captureButton, false)
+
 
                 binding.basicInfoLayout.capturedOnText.text = "Captured on ${ffObject.pokemon.captured_at.toDate()}"
 
@@ -69,7 +75,7 @@ class DetailsActivity : AppCompatActivity() {
 
                 setupAppBarLayout(
                     ffObject.pokemon.name,
-                    ffObject.pokemon.sprites.front_default,
+                    ffObject.pokemon.sprites.other.official_artwork.front_default,
                     ffObject.pokemon.sprites.back_default
                 )
 
@@ -79,10 +85,9 @@ class DetailsActivity : AppCompatActivity() {
                 Timber.d("Type : Wild")
 
                 binding.capturedInfoLayout.captureInfoTitle.text = "Found in"
-                binding.capturedInfoLayout.root.isVisible = true
-                binding.capturedByInfoLayout.root.isVisible = false
-
-                binding.captureButton.isVisible = true
+                updateViewState(binding.capturedInfoLayout.root, true)
+                updateViewState(binding.capturedByInfoLayout.root, false)
+                updateViewState(binding.captureButton, true)
 
             }
 
@@ -92,14 +97,13 @@ class DetailsActivity : AppCompatActivity() {
 
                 // Take ID and get stats based on this.
 
-                binding.capturedInfoLayout.captureInfoTitle.text = "Found in"
-                binding.capturedInfoLayout.root.isVisible = true
-                binding.capturedByInfoLayout.root.isVisible = false
+                binding.capturedInfoLayout.captureInfoTitle.text = "Captured in"
 
-                binding.captureButton.isVisible = false
+                updateViewState(binding.capturedInfoLayout.root, true)
+                updateViewState(binding.capturedByInfoLayout.root, false)
+                updateViewState(binding.captureButton, false)
 
                 binding.basicInfoLayout.capturedOnText.text = "Captured on ${teamObject.captured_at.toDate()}"
-
 
                 for (item in teamObject.types) {
                     val chip = createChip(item.type.name)
@@ -118,7 +122,48 @@ class DetailsActivity : AppCompatActivity() {
                     teamObject.sprites.back_default
                 )
             }
+
+            "captured" -> {
+
+                Timber.d("Captured : Here")
+
+                capturedObject = intent.extras?.getParcelable("captured_item")!!
+
+                binding.capturedInfoLayout.captureInfoTitle.text = "Captured in"
+
+                updateViewState(binding.capturedInfoLayout.root, true)
+                updateViewState(binding.capturedByInfoLayout.root, false)
+                updateViewState(binding.captureButton, false)
+
+                binding.basicInfoLayout.capturedOnText.text = "Captured on ${capturedObject.captured_at.toDate()}"
+
+                createTypesList(capturedObject.types)
+                createMovesList(capturedObject.moves)
+
+                setupAppBarLayout(
+                    capturedObject.name,
+                    capturedObject.sprites.other.official_artwork.front_default,
+                    capturedObject.sprites.back_default
+                )
+            }
         }
+    }
+
+    private fun createMovesList(moves: List<Moves>) {
+        for (item in moves) {
+            val chip = createChip(item.move.name)
+            binding.movesInfoLayout.movesChipGroup.addView(chip)
+        }
+    }
+
+    private fun createTypesList(types: List<Types>) {
+        for (item in types) {
+            val chip = createChip(item.type.name)
+            binding.basicInfoLayout.typesChipGroup.addView(chip)
+        }    }
+
+    fun updateViewState(view: View, state : Boolean) {
+        view.isVisible = state
     }
 
     private fun setupAppBarLayout(
@@ -182,21 +227,21 @@ class DetailsActivity : AppCompatActivity() {
          * install it inside the SupportMapFragment. This method will only be triggered once the
          * user has installed Google Play services and returned to the app.
          */
-        /**
-         * Manipulates the map once available.
-         * This callback is triggered when the map is ready to be used.
-         * This is where we can add markers or lines, add listeners or move the camera.
-         * In this case, we just add a marker near Sydney, Australia.
-         * If Google Play services is not installed on the device, the user will be prompted to
-         * install it inside the SupportMapFragment. This method will only be triggered once the
-         * user has installed Google Play services and returned to the app.
-         */
         mGoogleMap = googleMap
 
         when(type) {
             "team" -> {
                 val latlng = LatLng(teamObject.captured_lat_at, teamObject.captured_long_at)
                 mGoogleMap.addMarker(MarkerOptions().position(latlng).title(teamObject.name)
+                    .icon(bitmapDescriptorFromVector(this, R.drawable.pokeball_pokemon_svgrepo_com))
+                )
+                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 10f))
+
+            }
+
+            "captured" -> {
+                val latlng = LatLng(capturedObject.captured_lat_at, capturedObject.captured_long_at)
+                mGoogleMap.addMarker(MarkerOptions().position(latlng).title(capturedObject.name)
                     .icon(bitmapDescriptorFromVector(this, R.drawable.pokeball_pokemon_svgrepo_com))
                 )
                 mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 10f))
