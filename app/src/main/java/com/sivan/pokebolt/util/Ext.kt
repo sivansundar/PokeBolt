@@ -1,5 +1,11 @@
 package com.sivan.pokebolt.util
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -37,4 +43,14 @@ fun Any?.toDate(): String {
     zonedDateTime = zonedDateTime.toOffsetDateTime().atZoneSameInstant(ZoneId.systemDefault())
 
     return "${zonedDateTime.dayOfMonth}-${zonedDateTime.monthValue}-${zonedDateTime.year}"
+}
+
+
+fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
+    return ContextCompat.getDrawable(context, vectorResId)?.run {
+        setBounds(0, 0, 80, 80)
+        val bitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888)
+        draw(Canvas(bitmap))
+        BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
 }

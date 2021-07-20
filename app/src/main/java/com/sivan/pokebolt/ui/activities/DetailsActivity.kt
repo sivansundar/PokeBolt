@@ -1,21 +1,16 @@
 package com.sivan.pokebolt.ui.activities
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.os.Bundle
 import android.view.View
-import android.widget.LinearLayout
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.appbar.AppBarLayout
@@ -23,24 +18,35 @@ import com.google.android.material.chip.Chip
 import com.sivan.pokebolt.R
 import com.sivan.pokebolt.data.CapturedItem
 import com.sivan.pokebolt.data.TeamItem
+import com.sivan.pokebolt.data.WildItem
 import com.sivan.pokebolt.databinding.ActivityDetailsBinding
+import com.sivan.pokebolt.retrofit.DataState
 import com.sivan.pokebolt.retrofit.entity.FFObject
 import com.sivan.pokebolt.retrofit.entity.Moves
 import com.sivan.pokebolt.retrofit.entity.Types
+import com.sivan.pokebolt.util.bitmapDescriptorFromVector
 import com.sivan.pokebolt.util.toDate
+import com.sivan.pokebolt.viewmodel.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 
+@AndroidEntryPoint
 class DetailsActivity : AppCompatActivity() {
 
-    lateinit var binding : ActivityDetailsBinding
+    lateinit var binding: ActivityDetailsBinding
 
+    lateinit var wildItem: WildItem
     lateinit var ffObject: FFObject
-    lateinit var teamObject : TeamItem
-    lateinit var capturedObject : CapturedItem
+    lateinit var teamObject: TeamItem
+    lateinit var capturedObject: CapturedItem
 
-    lateinit var mGoogleMap : GoogleMap
-    lateinit var type : String
+    lateinit var mGoogleMap: GoogleMap
+    lateinit var type: String
+
+    private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,15 +58,19 @@ class DetailsActivity : AppCompatActivity() {
 
         type = intent.extras?.getString("type").toString()
 
-        when(type) {
+        when (type) {
             "ff" -> {
+                binding.appBarLayout.isVisible = true
+                binding.nestedScrollView.isVisible = true
+
                 Timber.d("Type : FF")
                 ffObject = intent.extras?.getParcelable("ff_item")!!
                 updateViewState(binding.capturedInfoLayout.root, false)
                 updateViewState(binding.captureButton, false)
 
 
-                binding.basicInfoLayout.capturedOnText.text = "Captured on ${ffObject.pokemon.captured_at.toDate()}"
+                binding.basicInfoLayout.capturedOnText.text =
+                    "Captured on ${ffObject.pokemon.captured_at.toDate()}"
 
                 for (item in ffObject.pokemon.types) {
                     val chip = createChip(item.type.name)
@@ -82,16 +92,26 @@ class DetailsActivity : AppCompatActivity() {
             }
 
             "wild" -> {
+
                 Timber.d("Type : Wild")
+                wildItem = intent.extras?.getParcelable("wild_item")!!
 
                 binding.capturedInfoLayout.captureInfoTitle.text = "Found in"
                 updateViewState(binding.capturedInfoLayout.root, true)
                 updateViewState(binding.capturedByInfoLayout.root, false)
                 updateViewState(binding.captureButton, true)
 
+                Timber.d("Name : ${wildItem.name} : ${wildItem.url}")
+
+                getWildPokemonDetails(wildItem.url)
+
+
             }
 
             "team" -> {
+                binding.appBarLayout.isVisible = true
+                binding.nestedScrollView.isVisible = true
+
                 Timber.d("Type : team")
                 teamObject = intent.extras?.getParcelable("team_item")!!
 
@@ -103,7 +123,8 @@ class DetailsActivity : AppCompatActivity() {
                 updateViewState(binding.capturedByInfoLayout.root, false)
                 updateViewState(binding.captureButton, false)
 
-                binding.basicInfoLayout.capturedOnText.text = "Captured on ${teamObject.captured_at.toDate()}"
+                binding.basicInfoLayout.capturedOnText.text =
+                    "Captured on ${teamObject.captured_at.toDate()}"
 
                 for (item in teamObject.types) {
                     val chip = createChip(item.type.name)
@@ -124,6 +145,8 @@ class DetailsActivity : AppCompatActivity() {
             }
 
             "captured" -> {
+                binding.appBarLayout.isVisible = true
+                binding.nestedScrollView.isVisible = true
 
                 Timber.d("Captured : Here")
 
@@ -135,7 +158,8 @@ class DetailsActivity : AppCompatActivity() {
                 updateViewState(binding.capturedByInfoLayout.root, false)
                 updateViewState(binding.captureButton, false)
 
-                binding.basicInfoLayout.capturedOnText.text = "Captured on ${capturedObject.captured_at.toDate()}"
+                binding.basicInfoLayout.capturedOnText.text =
+                    "Captured on ${capturedObject.captured_at.toDate()}"
 
                 createTypesList(capturedObject.types)
                 createMovesList(capturedObject.moves)
@@ -146,6 +170,53 @@ class DetailsActivity : AppCompatActivity() {
                     capturedObject.sprites.back_default
                 )
             }
+        }
+    }
+
+    private fun getWildPokemonDetails(id: String) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            mainViewModel.getPokemon(id).observe(this@DetailsActivity, {
+                when (it) {
+                    is DataState.Loading -> {
+                        binding.progressCircular.isVisible = true
+                        binding.appBarLayout.isVisible = false
+                        binding.nestedScrollView.isVisible = false
+                        binding.loadStatusText.isVisible = false
+
+                        Timber.d("Loading")
+                    }
+                    is DataState.Success -> {
+                        Timber.d("Success")
+
+                        binding.progressCircular.isVisible = false
+                        binding.loadStatusText.isVisible = false
+
+                        binding.appBarLayout.isVisible = true
+                        binding.nestedScrollView.isVisible = true
+
+
+
+                        setupAppBarLayout(
+                            it.data.name,
+                            it.data.sprites.other.official_artwork.front_default,
+                            it.data.sprites.back_default
+                        )
+
+                        createMovesList(it.data.moves)
+                        createTypesList(it.data.types)
+
+                    }
+                    is DataState.Error -> {
+                        binding.progressCircular.isVisible = false
+                        binding.appBarLayout.isVisible = false
+                        binding.nestedScrollView.isVisible = false
+
+                        binding.loadStatusText.isVisible = true
+
+                        Timber.d("Error : ${it.exception.message}")
+                    }
+                }
+            })
         }
     }
 
@@ -160,9 +231,10 @@ class DetailsActivity : AppCompatActivity() {
         for (item in types) {
             val chip = createChip(item.type.name)
             binding.basicInfoLayout.typesChipGroup.addView(chip)
-        }    }
+        }
+    }
 
-    fun updateViewState(view: View, state : Boolean) {
+    fun updateViewState(view: View, state: Boolean) {
         view.isVisible = state
     }
 
@@ -229,34 +301,40 @@ class DetailsActivity : AppCompatActivity() {
          */
         mGoogleMap = googleMap
 
-        when(type) {
+        when (type) {
             "team" -> {
                 val latlng = LatLng(teamObject.captured_lat_at, teamObject.captured_long_at)
-                mGoogleMap.addMarker(MarkerOptions().position(latlng).title(teamObject.name)
-                    .icon(bitmapDescriptorFromVector(this, R.drawable.pokeball_pokemon_svgrepo_com))
-                )
-                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 10f))
+                addMarker(latlng, teamObject.name)
 
             }
 
             "captured" -> {
                 val latlng = LatLng(capturedObject.captured_lat_at, capturedObject.captured_long_at)
-                mGoogleMap.addMarker(MarkerOptions().position(latlng).title(capturedObject.name)
-                    .icon(bitmapDescriptorFromVector(this, R.drawable.pokeball_pokemon_svgrepo_com))
-                )
-                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 10f))
+                addMarker(latlng, capturedObject.name)
 
+            }
+
+            "wild" -> {
+                val latlng = LatLng(wildItem.latitude, wildItem.longitude)
+                addMarker(latlng, wildItem.name)
             }
         }
 
     }
 
-    private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
-        return ContextCompat.getDrawable(context, vectorResId)?.run {
-            setBounds(0, 0, 80, 80)
-            val bitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888)
-            draw(Canvas(bitmap))
-            BitmapDescriptorFactory.fromBitmap(bitmap)
-        }
+    private fun addMarker(latlng: LatLng, name: String) {
+        mGoogleMap.addMarker(
+            MarkerOptions().position(latlng).title(name)
+                .icon(
+                    bitmapDescriptorFromVector(
+                        this,
+                        R.drawable.pokeball_pokemon_svgrepo_com
+                    )
+                )
+        )
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 10f))
+
     }
+
+
 }

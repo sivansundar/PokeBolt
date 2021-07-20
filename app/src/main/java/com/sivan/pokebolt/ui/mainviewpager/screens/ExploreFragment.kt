@@ -1,11 +1,13 @@
 package com.sivan.pokebolt.ui.mainviewpager.screens
 
-import android.location.Location
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -14,14 +16,25 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.clustering.ClusterManager
 import com.sivan.pokebolt.R
 import com.sivan.pokebolt.data.MyItem
+import com.sivan.pokebolt.data.WildItem
+import com.sivan.pokebolt.retrofit.DataState
+import com.sivan.pokebolt.ui.activities.DetailsActivity
+import com.sivan.pokebolt.util.ClusterRenderer
+import com.sivan.pokebolt.viewmodel.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-class ExploreFragment : Fragment() {
+@AndroidEntryPoint
+class ExploreFragment : Fragment(){
 
     private lateinit var clusterManager: ClusterManager<MyItem>
     lateinit var mGoogleMap : GoogleMap
+
+    private val mainViewModel : MainViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,7 +52,7 @@ class ExploreFragment : Fragment() {
 
     private fun setUpClusterer() {
         // Position the map.
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(-34.0, 151.0), 12f))
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(-34.0, 151.0), 15f))
 
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
@@ -51,26 +64,73 @@ class ExploreFragment : Fragment() {
         mGoogleMap.setOnCameraIdleListener(clusterManager)
         mGoogleMap.setOnMarkerClickListener(clusterManager)
 
+
+        clusterManager.renderer = ClusterRenderer(requireContext(), mGoogleMap, clusterManager)
+
+
         // Add cluster items (markers) to the cluster manager.
         addItems()
     }
 
     private fun addItems() {
 
-        // Set some lat/lng coordinates to start with.
-        var lat = -34.0
-        var lng = 151.0
+        lifecycleScope.launch {
+            mainViewModel.getPokemonList().observe(viewLifecycleOwner, {
+                when(it) {
+                    is DataState.Loading -> {
+                        Timber.d("Loading")
+                    }
+                    is DataState.Success -> {
+                        Timber.d("Success : ${it.data.results.size}")
 
 
-        val item = MyItem(lat, lng, "Title 23232", "Snippet 2323232")
-        clusterManager.addItem(item)
+                        it.data.results.forEach { pokemon ->
+                            val randomLocation = getRandomLocation()
+
+                            Timber.d("Success : ${pokemon.name}")
+                            Timber.d("Success : ${randomLocation}")
+
+                            val offsetItem = MyItem(
+                                             pokemon.name,
+                                             pokemon.url,
+                                             randomLocation.latitude,
+                                             randomLocation.longitude,
+                                             pokemon.name)
+
+                            clusterManager.addItem(offsetItem)
+                            clusterManager.cluster()
+                        }
+                    }
+                    is DataState.Error -> {
+                        Timber.d("Error : ${it.exception.message}")
+                    }
+                }
+            })
+        }
+
+//        val item = MyItem(lat, lng, "Title 23232", "Snippet 2323232")
+//        clusterManager.addItem(item)
+
         // Add ten cluster items in close proximity, for purposes of this example.
-        for (i in 0..9) {
-            val randomLocation = getRandomLocation()
-            val offsetItem = MyItem(randomLocation.latitude, randomLocation.longitude, "Title $i", "Snippet $i")
-            clusterManager.addItem(offsetItem)
+
+
+        clusterManager.setOnClusterItemClickListener { item->
+            val wildItem = WildItem(
+                name = item.getName(),
+                url = item.getUrl(),
+                latitude = item.position.latitude,
+                longitude = item.position.longitude
+            )
+
+            startActivity(
+                Intent(context, DetailsActivity::class.java)
+                    .putExtra("type", "wild")
+                    .putExtra("wild_item", wildItem))
+            true
         }
     }
+
+
 
     fun getRandomLocation(): LatLng {
         val latLng = LatLng(-34.0, 151.0)

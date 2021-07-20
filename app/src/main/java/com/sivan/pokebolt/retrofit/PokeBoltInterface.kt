@@ -30,5 +30,8 @@ interface PokeBoltInterface {
     @GET()
     suspend fun getPokemon(@Url url : String) : PokemonResponse
 
+    @GET()
+    suspend fun getPokemonList(@Url url : String) : PokemonListResponse
+
 
 }

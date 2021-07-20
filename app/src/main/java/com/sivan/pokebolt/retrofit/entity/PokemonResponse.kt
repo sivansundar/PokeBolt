@@ -9,6 +9,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Parcelize
 data class PokemonResponse(
+    @SerializedName("id")
+    @Expose
+    val id : String,
+
+    @SerializedName("name")
+    @Expose
+    val name : String,
+
     @SerializedName("stats")
     @Expose
     val stats : List<Stats>,

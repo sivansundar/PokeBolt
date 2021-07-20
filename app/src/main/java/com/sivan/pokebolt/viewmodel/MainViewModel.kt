@@ -5,9 +5,7 @@ import com.sivan.pokebolt.database.entities.CapturedCacheEntity
 import com.sivan.pokebolt.database.entities.MyTeamCacheEntity
 import com.sivan.pokebolt.repository.MainRepository
 import com.sivan.pokebolt.retrofit.DataState
-import com.sivan.pokebolt.retrofit.entity.ActivitiesResponse
-import com.sivan.pokebolt.retrofit.entity.CapturedResponse
-import com.sivan.pokebolt.retrofit.entity.MyTeamEntity
+import com.sivan.pokebolt.retrofit.entity.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +22,10 @@ class MainViewModel @Inject constructor(
 
     }
 
+    suspend fun getPokemonList(): LiveData<DataState<PokemonListResponse>> {
+        return repository.getPokemonList()
+    }
+
     suspend fun getMyTeam(): Flow<DataState<Boolean>> {
         return repository.getTeam()
     }
@@ -33,8 +35,8 @@ class MainViewModel @Inject constructor(
         return repository.getTeamFromDB()
     }
 
-    suspend fun getPokemon(id : String){
-        repository.getPokemon(id)
+    suspend fun getPokemon(id : String): LiveData<DataState<PokemonResponse>> {
+        return repository.getPokemon(id)
     }
 
     suspend fun getCapturedList(): LiveData<DataState<List<CapturedResponse>>> {
