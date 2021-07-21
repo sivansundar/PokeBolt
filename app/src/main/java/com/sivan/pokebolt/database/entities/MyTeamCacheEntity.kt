@@ -32,10 +32,10 @@ data class MyTeamCacheEntity(
     var moves: String,
 
     @ColumnInfo(name ="captured_lat_at")
-    val captured_lat_at: Double,
+    val captured_lat_at: Float,
 
     @ColumnInfo(name ="captured_long_at")
-    val captured_long_at: Double,
+    val captured_long_at: Float,
 
     @ColumnInfo(name = "stats")
     var stats: String,

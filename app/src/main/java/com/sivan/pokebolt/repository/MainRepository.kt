@@ -1,16 +1,18 @@
 package com.sivan.pokebolt.repository
 
 import androidx.lifecycle.liveData
+import com.sivan.pokebolt.data.PostPokemonItem
+import com.sivan.pokebolt.data.toCapturedCacheEntity
+import com.sivan.pokebolt.data.toEntity
+import com.sivan.pokebolt.data.toTeamCacheEntity
 import com.sivan.pokebolt.database.dao.CapturedDao
 import com.sivan.pokebolt.database.dao.MyTeamDao
 import com.sivan.pokebolt.database.entities.CapturedCacheEntity
 import com.sivan.pokebolt.database.entities.MyTeamCacheEntity
 import com.sivan.pokebolt.retrofit.DataState
 import com.sivan.pokebolt.retrofit.PokeBoltInterface
-import com.sivan.pokebolt.retrofit.entity.PokemonResponse
 import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -167,5 +169,36 @@ class MainRepository @Inject constructor(
 
     suspend fun getCapturedFromDB(): Observable<List<CapturedCacheEntity>> {
         return capturedDao.getCapturedList()
+    }
+
+    suspend fun capturePokemon(capturedPokemonItem: PostPokemonItem) = liveData {
+        emit(DataState.Loading)
+
+        try {
+            Timber.d("Entity : ${capturedPokemonItem.toEntity()}")
+            val postPokemonResponse = pokeBoltInterface.postPokemon(capturedPokemonItem.toEntity())
+
+            //Insert to Team table
+            if (myTeamDao.exists(capturedPokemonItem.id.toInt())) {
+                Timber.d("Insert status : Pokemon exists with ID : ${capturedPokemonItem.id}")
+            } else {
+                val insertStatus = myTeamDao.insert(capturedPokemonItem.toTeamCacheEntity())
+                Timber.d("Insert status : $insertStatus")
+            }
+
+            //Insert to Captured table
+            if (capturedDao.exists(capturedPokemonItem.id.toInt())) {
+                Timber.d("Insert status : Pokemon exists with ID : ${capturedPokemonItem.id}")
+            } else {
+                val insertStatus = capturedDao.insert(capturedPokemonItem.toCapturedCacheEntity())
+                Timber.d("Insert status : $insertStatus")
+            }
+
+            emit(DataState.Success(postPokemonResponse))
+        }catch(e : Exception) {
+            Timber.d( "capturePokemon: ERROR : ${e.message} : Cause : ${e.cause} : StackTrace : ${e.printStackTrace()}")
+            emit(DataState.Error(e))
+
+        }
     }
 }

@@ -1,21 +1,23 @@
 package com.sivan.pokebolt.retrofit
 
-import android.provider.ContactsContract
-import androidx.lifecycle.LiveData
 import com.sivan.pokebolt.retrofit.entity.*
-import kotlinx.coroutines.flow.Flow
 import retrofit2.Call
-import retrofit2.Response
 import retrofit2.http.*
+
 
 interface PokeBoltInterface {
 
     @POST("/token?email=sivan.sundar@gmail.com")
     fun getToken(): Call<TokenResponse>
 
+    @POST("/capture")
+    @Headers("Content-Type: application/json")
+    suspend fun postPokemon(@Body capturedPokemonItem: WildEntity): CaptureWildPokemonResponse
+
     //Get community details
     @GET("/activity")
     suspend fun getActivities() : ActivitiesResponse
+
 
     //My-team
     @GET("/my-team")

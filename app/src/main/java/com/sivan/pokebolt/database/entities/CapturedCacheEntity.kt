@@ -3,10 +3,7 @@ package com.sivan.pokebolt.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
 import com.sivan.pokebolt.data.CapturedItem
-import com.sivan.pokebolt.data.TeamItem
 import com.sivan.pokebolt.retrofit.entity.Moves
 import com.sivan.pokebolt.retrofit.entity.Sprites
 import com.sivan.pokebolt.retrofit.entity.Stats
@@ -35,10 +32,10 @@ data class CapturedCacheEntity(
     var moves: String,
 
     @ColumnInfo(name ="captured_lat_at")
-    val captured_lat_at: Double,
+    val captured_lat_at: Float,
 
     @ColumnInfo(name ="captured_long_at")
-    val captured_long_at: Double,
+    val captured_long_at: Float,
 
     @ColumnInfo(name = "stats")
     var stats: String,

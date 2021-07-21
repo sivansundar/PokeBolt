@@ -20,6 +20,7 @@ class AuthInterceptor(context: Context) : Interceptor {
 
             Timber.d("Token is $it")
             requestBuilder.addHeader("Authorization", "Bearer $it")
+
         }
 
         return chain.proceed(requestBuilder.build())

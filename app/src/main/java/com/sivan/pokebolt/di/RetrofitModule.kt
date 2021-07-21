@@ -47,7 +47,7 @@ object RetrofitModule {
 
         val logging = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger {
             Timber.tag("OkHttp").d(it)
-        })
+        }).setLevel(HttpLoggingInterceptor.Level.BODY)
 
         return retrofit.client(
             OkHttpClient.Builder()

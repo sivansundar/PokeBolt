@@ -23,7 +23,14 @@ class TokenAuthenticator @Inject constructor(
 
         return response.request.newBuilder()
             .header("Authorization", "Bearer ${sessionManager.fetchAuthToken()}")
+
+
             .build()
+
+//        "Accept-Encoding: gzip,deflate",
+//        "Content-Type: Application/Json;charset=UTF-8",
+//        "Accept: Application/Json",
+//        "User-Agent: Retrofit 2.3.0"
 
     }
 

@@ -15,11 +15,15 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.sivan.pokebolt.R
 import com.sivan.pokebolt.data.CapturedItem
+import com.sivan.pokebolt.data.PostPokemonItem
 import com.sivan.pokebolt.data.TeamItem
 import com.sivan.pokebolt.data.WildItem
 import com.sivan.pokebolt.databinding.ActivityDetailsBinding
+import com.sivan.pokebolt.databinding.CaptureAlertDialogLayoutBinding
 import com.sivan.pokebolt.retrofit.DataState
 import com.sivan.pokebolt.retrofit.entity.FFObject
 import com.sivan.pokebolt.retrofit.entity.Moves
@@ -30,6 +34,8 @@ import com.sivan.pokebolt.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 
 
@@ -39,6 +45,8 @@ class DetailsActivity : AppCompatActivity() {
     lateinit var binding: ActivityDetailsBinding
 
     lateinit var wildItem: WildItem
+    lateinit var postPokemonItem: PostPokemonItem
+
     lateinit var ffObject: FFObject
     lateinit var teamObject: TeamItem
     lateinit var capturedObject: CapturedItem
@@ -48,10 +56,15 @@ class DetailsActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
 
+    private lateinit var materialAlertDialogBuilder: MaterialAlertDialogBuilder
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        materialAlertDialogBuilder = MaterialAlertDialogBuilder(this)
+
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(callback)
@@ -102,6 +115,9 @@ class DetailsActivity : AppCompatActivity() {
                 updateViewState(binding.captureButton, true)
 
                 Timber.d("Name : ${wildItem.name} : ${wildItem.url}")
+
+
+
 
                 getWildPokemonDetails(wildItem.url)
 
@@ -169,13 +185,15 @@ class DetailsActivity : AppCompatActivity() {
                     capturedObject.sprites.other.official_artwork.front_default,
                     capturedObject.sprites.back_default
                 )
+
+
             }
         }
     }
 
-    private fun getWildPokemonDetails(id: String) {
+    private fun getWildPokemonDetails(url: String) {
         lifecycleScope.launch(Dispatchers.Main) {
-            mainViewModel.getPokemon(id).observe(this@DetailsActivity, {
+            mainViewModel.getPokemon(url).observe(this@DetailsActivity, {
                 when (it) {
                     is DataState.Loading -> {
                         binding.progressCircular.isVisible = true
@@ -188,11 +206,26 @@ class DetailsActivity : AppCompatActivity() {
                     is DataState.Success -> {
                         Timber.d("Success")
 
+
+
                         binding.progressCircular.isVisible = false
                         binding.loadStatusText.isVisible = false
 
                         binding.appBarLayout.isVisible = true
                         binding.nestedScrollView.isVisible = true
+
+
+                        postPokemonItem = PostPokemonItem(
+                            id = it.data.id.toInt(),
+                            name = wildItem.name,
+                            url = wildItem.url,
+                            latitude = wildItem.latitude,
+                            longitude = wildItem.longitude,
+                            types = Json.encodeToString(it.data.types),
+                            moves = Json.encodeToString(it.data.moves),
+                            sprites = Json.encodeToString(it.data.sprites),
+                            stats = Json.encodeToString(it.data.stats)
+                        )
 
 
 
@@ -204,6 +237,7 @@ class DetailsActivity : AppCompatActivity() {
 
                         createMovesList(it.data.moves)
                         createTypesList(it.data.types)
+
 
                     }
                     is DataState.Error -> {
@@ -217,6 +251,52 @@ class DetailsActivity : AppCompatActivity() {
                     }
                 }
             })
+        }
+
+        binding.captureButton.setOnClickListener {
+            val customView = CaptureAlertDialogLayoutBinding.inflate(layoutInflater)
+                materialAlertDialogBuilder.setView(customView.root)
+                .setTitle("Assign a name?")
+                .setPositiveButton("Save"){ dialog, _ ->
+                    if (postPokemonItem!=null) {
+                        val name = customView.nameTextInput.text.toString()
+                        val item = postPokemonItem.copy()
+
+                        if (name.isNotBlank()) {
+                            item.name = name
+                        }
+
+                        postPokemon(item)
+                    }
+                }
+                .setNeutralButton("Cancel"){ dialog, _ ->
+
+                }.show()
+
+
+        }
+    }
+
+    private fun postPokemon(item: PostPokemonItem) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            mainViewModel.capturePokemon(item).observe(this@DetailsActivity, {
+                when(it) {
+                    is DataState.Success -> {
+                        Timber.d("Success : State : ${it.data.message}")
+
+                        val snackbar = Snackbar.make(binding.root, "You have successfully captured ${wildItem.name}", Snackbar.LENGTH_LONG)
+                        snackbar.show()
+                    }
+                    is DataState.Loading -> {
+                        Timber.d("Loading")
+                    }
+                    is DataState.Error -> {
+                        Timber.d("Error")
+                        //Show snackbar
+                    }
+                }
+            })
+
         }
     }
 
@@ -303,19 +383,23 @@ class DetailsActivity : AppCompatActivity() {
 
         when (type) {
             "team" -> {
-                val latlng = LatLng(teamObject.captured_lat_at, teamObject.captured_long_at)
+                val latlng = LatLng(teamObject.captured_lat_at.toDouble(),
+                    teamObject.captured_long_at.toDouble()
+                )
                 addMarker(latlng, teamObject.name)
 
             }
 
             "captured" -> {
-                val latlng = LatLng(capturedObject.captured_lat_at, capturedObject.captured_long_at)
+                val latlng = LatLng(capturedObject.captured_lat_at.toDouble(),
+                    capturedObject.captured_long_at.toDouble()
+                )
                 addMarker(latlng, capturedObject.name)
 
             }
 
             "wild" -> {
-                val latlng = LatLng(wildItem.latitude, wildItem.longitude)
+                val latlng = LatLng(wildItem.latitude.toDouble(), wildItem.longitude.toDouble())
                 addMarker(latlng, wildItem.name)
             }
         }

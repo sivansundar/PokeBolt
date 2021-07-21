@@ -1,8 +1,6 @@
 package com.sivan.pokebolt.data
 
 import android.os.Parcelable
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
 import com.sivan.pokebolt.retrofit.entity.Moves
 import com.sivan.pokebolt.retrofit.entity.Sprites
 import com.sivan.pokebolt.retrofit.entity.Stats
@@ -26,8 +24,8 @@ data class TeamItem(
 
     val captured_at: String,
 
-    val captured_lat_at: Double,
+    val captured_lat_at: Float,
 
-    val captured_long_at: Double,
+    val captured_long_at: Float,
 ) : Parcelable{
 }

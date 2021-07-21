@@ -28,11 +28,11 @@ data class MyTeamEntity(
 
     @SerializedName("captured_lat_at")
     @Expose
-    val captured_lat_at: Double,
+    val captured_lat_at: Float,
 
     @SerializedName("captured_long_at")
     @Expose
-    val captured_long_at: Double,
+    val captured_long_at: Float,
 
     ) : Parcelable {
 }

@@ -113,14 +113,16 @@ class ExploreFragment : Fragment(){
 
         // Add ten cluster items in close proximity, for purposes of this example.
 
-
         clusterManager.setOnClusterItemClickListener { item->
             val wildItem = WildItem(
+                id = Random.nextInt(),
                 name = item.getName(),
                 url = item.getUrl(),
-                latitude = item.position.latitude,
-                longitude = item.position.longitude
+                latitude = item.position.latitude.toFloat(),
+                longitude = item.position.longitude.toFloat()
             )
+
+
 
             startActivity(
                 Intent(context, DetailsActivity::class.java)
