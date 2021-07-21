@@ -18,7 +18,6 @@ interface PokeBoltInterface {
     @GET("/activity")
     suspend fun getActivities() : ActivitiesResponse
 
-
     //My-team
     @GET("/my-team")
     suspend fun getMyTeam() : List<MyTeamEntity>
@@ -26,8 +25,6 @@ interface PokeBoltInterface {
     @GET("/captured")
     suspend fun getCaptured() : List<CapturedResponse>
 
-    @GET()
-    fun getMoveDetails(@Url url : String) : MoveInfo
 
     @GET()
     suspend fun getPokemon(@Url url : String) : PokemonResponse

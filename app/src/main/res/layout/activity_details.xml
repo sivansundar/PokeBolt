@@ -11,7 +11,8 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        android:visibility="gone">
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:id="@+id/collapsableToolbar"
@@ -42,6 +43,7 @@
                     android:layout_height="80dp"
                     android:layout_marginStart="24dp"
                     android:layout_marginBottom="24dp"
+                    android:transitionName="pokemonFrontTransition"
                     android:src="@drawable/pokeball_pokemon_svgrepo_com"
                     app:layout_constraintBottom_toTopOf="@+id/pokemon_title"
                     app:layout_constraintStart_toStartOf="parent" />
@@ -105,6 +107,7 @@
         android:layout_marginRight="24dp"/>
 
     <androidx.core.widget.NestedScrollView
+        tools:visibility="visible"
         android:visibility="gone"
         android:id="@+id/nested_scroll_view"
         android:layout_width="match_parent"

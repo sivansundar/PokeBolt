@@ -16,6 +16,7 @@
             android:layout_height="108dp"
             android:src="@drawable/user1"
             android:scaleType="centerCrop"
+            android:transitionName="userImageTransition"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -56,6 +57,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_marginEnd="16dp"
+            android:transitionName="pokemonFrontTransition"
             android:src="@drawable/safariball_icon_icons_com_67447"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

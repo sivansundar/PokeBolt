@@ -10,6 +10,11 @@ import com.sivan.pokebolt.util.OnFFItemClickInterface
 import com.sivan.pokebolt.util.toDate
 import com.sivan.pokebolt.util.toLocalTime12Hr
 
+/**
+ * FFAdapter is responsible to display all the pokemons that belong to the friend or foe categories.
+ * Since we generate the same layout for both, we use a common layout but only the items of the lists differ.
+ * */
+
 class FFAdapter(
     private val listener: OnFFItemClickInterface) : RecyclerView.Adapter<FFAdapter.ActivityAdapterVH>() {
 
@@ -39,14 +44,12 @@ class FFAdapter(
     inner class ActivityAdapterVH(private val binding: ActivityItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        val userImageList = emptyList<Int>()
-
         init {
             binding.root.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val item = ffList[position]
-                    listener.onItemClick(item)
+                    listener.onItemClick(item, binding.pokeballIcon)
                 }
             }
         }

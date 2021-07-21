@@ -26,7 +26,14 @@ class MainRepository @Inject constructor(
 ) {
 
 
-    fun getActivities() = flow {
+    suspend fun getActivities() = flow {
+
+        /**
+         * This function is responsible for performing a GET request to the /activity endpoint and retrieve the lists of pokemons captured by our friends and foes.
+         * Using the URL obtained from our friends and foes list, we send a request to that URL to get additional info about the pokemon.
+         *
+         * */
+
         emit(DataState.Loading)
        try {
            val list = pokeBoltInterface.getActivities()
@@ -55,6 +62,12 @@ class MainRepository @Inject constructor(
    }
 
     suspend fun getCapturedList() = liveData{
+
+        /**
+         * This function is responsible for getting the list of our captured pokemon that is stored in the cloud.
+         * We save this data to our Room database and later, we retrieve that data in our CapturedFragment.kt
+         *
+         * */
 
         emit(DataState.Loading)
         try {
@@ -98,6 +111,11 @@ class MainRepository @Inject constructor(
     }
 
     suspend fun getPokemon(id : String) = liveData{
+
+        /**
+         * This function is responsible for fetching the details of a particular pokemon
+         * */
+
         emit(DataState.Loading)
          try {
             val pokemonResponse = pokeBoltInterface.getPokemon(id)
@@ -110,6 +128,12 @@ class MainRepository @Inject constructor(
     }
 
     suspend fun getPokemonList() = liveData{
+
+        /**
+         * This function is responsible for fetching list of pokemons from the Open Pokemon API.
+         *
+         * */
+
         emit(DataState.Loading)
         try {
             val pokemonList = pokeBoltInterface.getPokemonList("https://pokeapi.co/api/v2/pokemon/?limit=20&offset=0")
@@ -124,6 +148,12 @@ class MainRepository @Inject constructor(
     }
 
     suspend fun getTeam() = flow{
+
+        /**
+         * This function is responsible for fetching list of pokemons in our team.
+         * We later initiate a GET request to get the details of each pokemon and store them locally before retrieving them in out MyTeamFragment.kt
+         * */
+
         emit(DataState.Loading)
 
         try {
@@ -172,6 +202,12 @@ class MainRepository @Inject constructor(
     }
 
     suspend fun capturePokemon(capturedPokemonItem: PostPokemonItem) = liveData {
+
+        /**
+         * This function is responsible for sending a POST request to the /capture endpoint. This is used to store a new pokemon to the cloud.
+         * We then update our local database with the same.
+         * */
+
         emit(DataState.Loading)
 
         try {

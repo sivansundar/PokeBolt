@@ -1,7 +1,9 @@
 package com.sivan.pokebolt.ui.activities
 
 import android.os.Bundle
+import android.transition.Explode
 import android.view.View
+import android.view.Window
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -37,6 +39,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import timber.log.Timber
+import java.util.*
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 
 @AndroidEntryPoint
@@ -61,6 +66,7 @@ class DetailsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         materialAlertDialogBuilder = MaterialAlertDialogBuilder(this)
@@ -71,12 +77,19 @@ class DetailsActivity : AppCompatActivity() {
 
         type = intent.extras?.getString("type").toString()
 
-        when (type) {
-            "ff" -> {
-                binding.appBarLayout.isVisible = true
-                binding.nestedScrollView.isVisible = true
+        binding.basicInfoLayout.levelText.text = "Level ${Random.nextInt(1,100).toString()}"
 
+        when (type) {
+
+            /*
+            * */
+
+            "ff" -> {
                 Timber.d("Type : FF")
+
+                updateViewState(binding.appBarLayout, true)
+                updateViewState(binding.nestedScrollView, true)
+
                 ffObject = intent.extras?.getParcelable("ff_item")!!
                 updateViewState(binding.capturedInfoLayout.root, false)
                 updateViewState(binding.captureButton, false)
@@ -85,15 +98,8 @@ class DetailsActivity : AppCompatActivity() {
                 binding.basicInfoLayout.capturedOnText.text =
                     "Captured on ${ffObject.pokemon.captured_at.toDate()}"
 
-                for (item in ffObject.pokemon.types) {
-                    val chip = createChip(item.type.name)
-                    binding.basicInfoLayout.typesChipGroup.addView(chip)
-                }
-
-                for (item in ffObject.pokemon.moves) {
-                    val chip = createChip(item.move.name)
-                    binding.movesInfoLayout.movesChipGroup.addView(chip)
-                }
+                createTypesList(ffObject.pokemon.types)
+                createMovesList(ffObject.pokemon.moves)
 
 
                 setupAppBarLayout(
@@ -108,6 +114,7 @@ class DetailsActivity : AppCompatActivity() {
 
                 Timber.d("Type : Wild")
                 wildItem = intent.extras?.getParcelable("wild_item")!!
+                binding.pokeballIcon.isVisible = false
 
                 binding.capturedInfoLayout.captureInfoTitle.text = "Found in"
                 updateViewState(binding.capturedInfoLayout.root, true)
@@ -115,8 +122,6 @@ class DetailsActivity : AppCompatActivity() {
                 updateViewState(binding.captureButton, true)
 
                 Timber.d("Name : ${wildItem.name} : ${wildItem.url}")
-
-
 
 
                 getWildPokemonDetails(wildItem.url)
@@ -142,16 +147,8 @@ class DetailsActivity : AppCompatActivity() {
                 binding.basicInfoLayout.capturedOnText.text =
                     "Captured on ${teamObject.captured_at.toDate()}"
 
-                for (item in teamObject.types) {
-                    val chip = createChip(item.type.name)
-                    binding.basicInfoLayout.typesChipGroup.addView(chip)
-                }
-
-                for (item in teamObject.moves) {
-                    val chip = createChip(item.move.name)
-                    binding.movesInfoLayout.movesChipGroup.addView(chip)
-                }
-
+                createTypesList(teamObject.types)
+                createMovesList(teamObject.moves)
 
                 setupAppBarLayout(
                     teamObject.name,
@@ -206,7 +203,7 @@ class DetailsActivity : AppCompatActivity() {
                     is DataState.Success -> {
                         Timber.d("Success")
 
-
+                        updateViewState(binding.basicInfoLayout.capturedOnText, false)
 
                         binding.progressCircular.isVisible = false
                         binding.loadStatusText.isVisible = false
@@ -241,11 +238,11 @@ class DetailsActivity : AppCompatActivity() {
 
                     }
                     is DataState.Error -> {
-                        binding.progressCircular.isVisible = false
-                        binding.appBarLayout.isVisible = false
-                        binding.nestedScrollView.isVisible = false
+                        updateViewState(binding.progressCircular, false)
+                        updateViewState(binding.appBarLayout, false)
 
-                        binding.loadStatusText.isVisible = true
+                        updateViewState(binding.nestedScrollView, false)
+                        updateViewState(binding.loadStatusText, true)
 
                         Timber.d("Error : ${it.exception.message}")
                     }
@@ -335,20 +332,20 @@ class DetailsActivity : AppCompatActivity() {
                 isShow = false
 
                 binding.apply {
-                    frontImage.isVisible = false
-                    backImage.isVisible = false
+                    updateViewState(frontImage, false)
+                    updateViewState(backImage, false)
                 }
 
-                binding.pokemonTitle.isVisible = isShow
+                updateViewState(binding.pokemonTitle, isShow)
             } else {
                 binding.collapsableToolbar.title = ""
                 isShow = true
-                binding.pokemonTitle.isVisible = isShow
+                updateViewState(binding.pokemonTitle, isShow)
 
 
                 binding.apply {
-                    frontImage.isVisible = true
-                    backImage.isVisible = true
+                    updateViewState(frontImage, true)
+                    updateViewState(backImage, true)
                 }
 
 
@@ -365,7 +362,7 @@ class DetailsActivity : AppCompatActivity() {
 
     private fun createChip(name: String): View {
         val item = Chip(this@DetailsActivity)
-        item.text = name
+        item.text = name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         return item
     }
 

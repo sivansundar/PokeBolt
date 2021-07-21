@@ -1,11 +1,14 @@
 package com.sivan.pokebolt.ui.mainviewpager.screens
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.util.Pair as UtilPair
+
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -28,6 +31,8 @@ import timber.log.Timber
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
+
+
 
 /**
  * A simple [Fragment] subclass.
@@ -145,9 +150,14 @@ class CommunityFragment : Fragment(), OnFFItemClickInterface {
             }
     }
 
-    override fun onItemClick(item: FFObject) {
-          startActivity(Intent(context, DetailsActivity::class.java)
-              .putExtra("type", "ff")
-              .putExtra("ff_item", item))
+    override fun onItemClick(item: FFObject, pokeballIcon: View) {
+
+        val options = ActivityOptions.makeSceneTransitionAnimation(activity,
+            UtilPair.create(pokeballIcon, "pokemonFrontTransition"))
+
+        val intent = Intent(context, DetailsActivity::class.java)
+            .putExtra("type", "ff")
+            .putExtra("ff_item", item)
+          startActivity(intent, options.toBundle())
     }
 }

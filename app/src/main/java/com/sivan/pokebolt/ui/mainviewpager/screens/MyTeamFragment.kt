@@ -1,7 +1,9 @@
 package com.sivan.pokebolt.ui.mainviewpager.screens
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
+import android.util.Pair
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -106,10 +108,14 @@ class MyTeamFragment : Fragment(), OnTeamItemClickInterface {
             }
     }
 
-    override fun onItemClick(item: TeamItem) {
+    override fun onItemClick(item: TeamItem, pokemonImage: View) {
+
+        val options = ActivityOptions.makeSceneTransitionAnimation(activity,
+            Pair.create(pokemonImage, "pokemonFrontTransition"))
+
         startActivity(
             Intent(context, DetailsActivity::class.java)
             .putExtra("type", "team")
-            .putExtra("team_item", item))
+            .putExtra("team_item", item), options.toBundle())
     }
 }

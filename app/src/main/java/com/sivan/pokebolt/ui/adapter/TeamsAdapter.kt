@@ -44,7 +44,7 @@ class TeamsAdapter(
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val item = teamsList[position]
-                    listener.onItemClick(item)
+                    listener.onItemClick(item, binding.pokemonImage)
                 }
             }
         }

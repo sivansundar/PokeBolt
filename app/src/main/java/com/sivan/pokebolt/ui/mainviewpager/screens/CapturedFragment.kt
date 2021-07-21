@@ -1,7 +1,9 @@
 package com.sivan.pokebolt.ui.mainviewpager.screens
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
+import android.util.Pair
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +12,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.sivan.pokebolt.data.CapturedItem
-import com.sivan.pokebolt.database.entities.CapturedCacheEntity
 import com.sivan.pokebolt.database.entities.toListModel
 import com.sivan.pokebolt.databinding.FragmentCapturedBinding
 import com.sivan.pokebolt.ui.activities.DetailsActivity
@@ -111,10 +112,14 @@ class CapturedFragment : Fragment(), OnCapturedItemClickInterface {
             }
     }
 
-    override fun onItemClick(item: CapturedItem) {
+    override fun onItemClick(item: CapturedItem, capturedItemImage: View) {
+
+        val options = ActivityOptions.makeSceneTransitionAnimation(activity,
+            Pair.create(capturedItemImage, "pokemonFrontTransition"))
+
         startActivity(
             Intent(context, DetailsActivity::class.java)
             .putExtra("type", "captured")
-            .putExtra("captured_item", item))
+            .putExtra("captured_item", item), options.toBundle())
     }
 }

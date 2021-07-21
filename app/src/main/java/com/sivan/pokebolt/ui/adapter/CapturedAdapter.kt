@@ -5,13 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.sivan.pokebolt.data.CapturedItem
-import com.sivan.pokebolt.database.entities.CapturedCacheEntity
-import com.sivan.pokebolt.database.entities.toListModel
 import com.sivan.pokebolt.databinding.CapturedItemBinding
-import com.sivan.pokebolt.retrofit.entity.FFObject
 import com.sivan.pokebolt.util.OnCapturedItemClickInterface
-import com.sivan.pokebolt.util.toDate
-import com.sivan.pokebolt.util.toLocalTime12Hr
 import timber.log.Timber
 
 
@@ -49,7 +44,7 @@ class CapturedAdapter(
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val item = capturedList[position]
-                    listener.onItemClick(item)
+                    listener.onItemClick(item, binding.capturedItemImage)
                 }
             }
         }

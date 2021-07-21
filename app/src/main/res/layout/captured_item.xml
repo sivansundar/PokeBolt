@@ -8,6 +8,7 @@
         android:id="@+id/captured_item_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:transitionName="pokemonFrontTransition"
         android:src="@drawable/safariball_icon_icons_com_67447"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

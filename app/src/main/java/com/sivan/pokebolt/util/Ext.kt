@@ -6,13 +6,17 @@ import android.graphics.Canvas
 import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
 
 fun Any?.toLocalTime12Hr(): String {
-    //val dataTime = "2021-01-19T13:27:41.747Z"
 
     if (this == null) return "null"
 
@@ -32,7 +36,6 @@ fun Any?.toLocalTime12Hr(): String {
 }
 
 fun Any?.toDate(): String {
-    //val dataTime = "2021-01-19T13:27:41.747Z"
 
     if (this == null) return "null"
 
@@ -42,7 +45,8 @@ fun Any?.toDate(): String {
     var zonedDateTime: ZonedDateTime = ZonedDateTime.parse(this.toString(), dateTimeFormatter)
     zonedDateTime = zonedDateTime.toOffsetDateTime().atZoneSameInstant(ZoneId.systemDefault())
 
-    return "${zonedDateTime.dayOfMonth}-${zonedDateTime.monthValue}-${zonedDateTime.year}"
+    return "${zonedDateTime.month.toString().lowercase(Locale.getDefault())
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }} ${zonedDateTime.dayOfMonth}, ${zonedDateTime.year}"
 }
 
 
@@ -53,4 +57,28 @@ fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescri
         draw(Canvas(bitmap))
         BitmapDescriptorFactory.fromBitmap(bitmap)
     }
+}
+
+fun getRandomLocation(): LatLng {
+    val latLng = LatLng(-34.0, 151.0)
+    val radius = 10000
+    val x0 = latLng.latitude
+    val y0 = latLng.longitude
+
+
+    // Convert radius from meters to degrees
+    val radiusInDegrees = (radius / 111000f).toDouble()
+    val u = Random.nextDouble()
+    val v = Random.nextDouble()
+    val w = radiusInDegrees * Math.sqrt(u)
+    val t = 2 * Math.PI * v
+    val x = w * cos(t)
+    val y = w * sin(t)
+
+    // Adjust the x-coordinate for the shrinking of the east-west distances
+    val new_x = x / Math.cos(y0)
+    val foundLatitude = new_x + x0
+    val foundLongitude = y + y0
+
+    return LatLng(foundLatitude, foundLongitude)
 }

@@ -7,13 +7,18 @@ import okhttp3.*
 import timber.log.Timber
 import java.io.IOException
 
+
+/**
+ * The AuthInterceptor is responsible to add our JWT to each of our request.
+ *
+ * */
+
 class AuthInterceptor(context: Context) : Interceptor {
     private val sessionManager = SessionManager(context)
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val requestBuilder = chain.request().newBuilder()
-        //Log.d("TAG", "intercept: Token : ")
-        // If token has been saved, add it to the request
+
 
         Timber.d("Here")
         sessionManager.fetchAuthToken()?.let {

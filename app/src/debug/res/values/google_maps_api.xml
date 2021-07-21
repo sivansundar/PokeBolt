@@ -1,0 +1,24 @@
+<resources>
+    <!--
+    TODO: Before you run your application, you need a Google Maps API key.
+
+    To get one, follow this link, follow the directions and press "Create" at the end:
+
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=EB:25:85:E5:83:D5:54:FD:1A:3C:9C:A2:00:94:E0:40:5D:67:13:F3%3Bcom.sivan.pokebolt.ui.mainviewpager.screens
+
+    You can also add your credentials to an existing key, using these values:
+
+    Package name:
+    com.sivan.pokebolt.ui.mainviewpager.screens
+
+    SHA-1 certificate fingerprint:
+    EB:25:85:E5:83:D5:54:FD:1A:3C:9C:A2:00:94:E0:40:5D:67:13:F3
+
+    Alternatively, follow the directions here:
+    https://developers.google.com/maps/documentation/android/start#get-key
+
+    Once you have your key (it starts with "AIza"), replace the "google_maps_key"
+    string in this file.
+    -->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyDjAhCUnhszVOwOFlWIO0QbWaWVJfQ5veA</string>
+</resources>

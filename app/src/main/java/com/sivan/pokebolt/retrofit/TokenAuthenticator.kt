@@ -8,6 +8,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * This class is responsible to reach out to the JWT endpoint to get a fresh token if our request fails with a 401 error.
+ * */
 
 class TokenAuthenticator @Inject constructor(
     context : Context) : Authenticator {
